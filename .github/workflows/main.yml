@@ -2,7 +2,7 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -20,17 +20,17 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - name: Login to Heroku Container Registry
-      env: 
+      env:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-      run: heroku container:login 
+      run: heroku container:login
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
     - name: Build and push
       env:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-      run: heroku container:push -a vc-staging web 
+      run: heroku container:push -a vc-production web
     - name: Release
       env:
         HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-      run: heroku container:release -a vc-staging web 
+      run: heroku container:release -a vc-production web
