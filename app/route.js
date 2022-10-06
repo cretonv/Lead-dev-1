@@ -37,6 +37,9 @@ function route(app) {
         return res.status(500).send({ error });
       });
   });
+  app.get('/zip', (req, res) => {
+    console.log(req.query.tags)
+  })
 }
 
 module.exports = route;
