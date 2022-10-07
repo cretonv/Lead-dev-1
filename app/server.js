@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express');
 const favicon = require('serve-favicon');
 const path = require('path');
@@ -17,6 +18,7 @@ app.set('view engine', 'html');
 // load route
 require('./route')(app);
 
+require('./listen_for_message')()
 // server
 const port = process.env.PORT || 3000;
 app.server = app.listen(port);

@@ -1,8 +1,13 @@
 const formValidator = require('./form_validator');
 const photoModel = require('./photo_model');
+const pubSub = require('./pubsub')
+const { Storage } = require("@google-cloud/storage");
+
+const fileNameDb = require("./fileNameDb");
+const storage = new Storage()
 
 function route(app) {
-  app.get('/', (req, res) => {
+  app.get('/', async (req, res) => {
     const tags = req.query.tags;
     const tagmode = req.query.tagmode;
 
@@ -25,20 +30,39 @@ function route(app) {
       return res.render('index', ejsLocalVariables);
     }
 
+    console.log(fileNameDb)
+    ejsLocalVariables.zipUrl = ''
+    if (fileNameDb[tags]) {
+      const options = {
+        action: 'read',
+        expires: +Date.now() + (2*24*3600*1000)
+      };
+      const signedUrls = await storage
+          .bucket('dmii2022bucket')
+          .file(fileNameDb[tags])
+          .getSignedUrl(options);
+      console.log(signedUrls)
+      ejsLocalVariables.zipUrl = signedUrls
+    }
     // get photos from flickr public feed api
     return photoModel
-      .getFlickrPhotos(tags, tagmode)
-      .then(photos => {
-        ejsLocalVariables.photos = photos;
-        ejsLocalVariables.searchResults = true;
-        return res.render('index', ejsLocalVariables);
-      })
-      .catch(error => {
-        return res.status(500).send({ error });
-      });
+        .getFlickrPhotos(tags, tagmode)
+        .then(photos => {
+          ejsLocalVariables.photos = photos;
+          ejsLocalVariables.searchResults = true;
+          return res.render('index', ejsLocalVariables);
+        })
+        .catch(error => {
+          return res.status(500).send({ error });
+        });
   });
-  app.get('/zip', (req, res) => {
-    console.log(req.query.tags)
+
+  app.get('/zip', async (req, res) => {
+    const tags = req.query.tags;
+
+    pubSub.publishMessage(tags)
+
+    res.end('Zip demandé')
   })
 }
 
